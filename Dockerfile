@@ -1,30 +1,36 @@
-FROM golang:1.19-alpine
+# syntax=docker/dockerfile:1
 
-# Set destination for COPY
-WORKDIR /ronlenk
+# parent image
+FROM golang:1.19-alpine AS builder
 
-# Download Go modules
-COPY go.mod .
-COPY go.sum .
+# workspace directory
+WORKDIR /app
+
+# copy `go.mod` and `go.sum`
+COPY go.mod ./
+COPY go.sum ./
+# install dependencies
 RUN go mod download
 
-# Copy the source code. Note the slash at the end, as explained in
-# https://docs.docker.com/engine/reference/builder/#copy
+# copy go source code
 COPY *.go ./
 
-# Build
-RUN go build -o /ronlenk/s3filter
+# build executable
+RUN go build -o ./bin/s3filter .
 
-# This is for documentation purposes only.
-# To actually open the port, runtime parameters
-# must be supplied to the docker command.
-EXPOSE 8080
+##################################
 
-# (Optional) environment variable that our dockerised
-# application can make use of. The value of environment
-# variables can also be set via parameters supplied
-# to the docker command on the command line.
-#ENV HTTP_PORT=8081
+# parent image
+FROM alpine
 
-# Run
-CMD [ "/ronlenk/s3filter" ]
+# workspace directory
+WORKDIR /app
+
+# copy binary file from the `builder` stage
+COPY --from=builder /app/bin/s3filter ./
+
+# set entrypoint
+ENTRYPOINT [ "./s3filter" ]
+
+# default cmd arg
+CMD [ "-input" ]
