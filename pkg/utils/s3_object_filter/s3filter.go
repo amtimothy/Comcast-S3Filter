@@ -20,6 +20,7 @@ type s3ObjectFilterer struct {
 	s3Client *s3.S3
 }
 
+// create a new s3object filter instance
 func NewS3ObjectFilterer(sBucketKey []string, query string, s3Client *s3.S3) s3Objectfilterer {
 	return &s3ObjectFilterer{
 		bucket:   sBucketKey[0],
@@ -29,17 +30,18 @@ func NewS3ObjectFilterer(sBucketKey []string, query string, s3Client *s3.S3) s3O
 	}
 }
 
+// main function of s3object filter : filter objects in s3 bucket using sql typed query
 func (s3Filter *s3ObjectFilterer) FilterS3ObjectData() error {
 	params := &s3.SelectObjectContentInput{
-		Bucket:         aws.String(s3Filter.bucket),
-		Key:            aws.String(s3Filter.key),
-		ExpressionType: aws.String(s3.ExpressionTypeSql),
-		Expression:     aws.String(s3Filter.query),
-		InputSerialization: &s3.InputSerialization{
+		Bucket:         aws.String(s3Filter.bucket),      // set bucket
+		Key:            aws.String(s3Filter.key),         // set Key
+		ExpressionType: aws.String(s3.ExpressionTypeSql), // set the expression type to sql
+		Expression:     aws.String(s3Filter.query),       // set query as an Expression
+		InputSerialization: &s3.InputSerialization{ // set the input serialization
 			JSON: &s3.JSONInput{
 				Type: aws.String(s3.JSONTypeLines),
 			},
-			CompressionType: aws.String(s3.CompressionTypeGzip),
+			CompressionType: aws.String(s3.CompressionTypeGzip), // set the compression type to GZip
 		},
 		OutputSerialization: &s3.OutputSerialization{
 			JSON: &s3.JSONOutput{},
